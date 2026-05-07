@@ -6,6 +6,12 @@ import ExerciseLogger from '@/components/ExerciseLogger'
 import Link from 'next/link'
 import { getAthleteDashboardData, getCurrentSession, getPendingTrainerRequests, getUserProfile, logExercise, respondToTrainerRequest, updateUserProfile } from '@/lib/api'
 
+const createSessionId = () => {
+  const c = globalThis.crypto
+  if (c && typeof c.randomUUID === 'function') return c.randomUUID()
+  return `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+}
+
 export default function Dashboard() {
   const router = useRouter()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,7 +63,7 @@ export default function Dashboard() {
           setSelectedDay(data.upNextDayNumber)
           setWorkoutSessionIds(prev => {
             if (prev[data.upNextDayNumber]) return prev
-            return { ...prev, [data.upNextDayNumber]: crypto.randomUUID() }
+            return { ...prev, [data.upNextDayNumber]: createSessionId() }
           })
         }
         setPendingRequests(reqs)
@@ -75,7 +81,7 @@ export default function Dashboard() {
     const timer = setTimeout(() => {
       setWorkoutSessionIds(prev => {
         if (prev[selectedDay]) return prev
-        return { ...prev, [selectedDay]: crypto.randomUUID() }
+        return { ...prev, [selectedDay]: createSessionId() }
       })
     }, 0)
     return () => clearTimeout(timer)
@@ -128,7 +134,7 @@ export default function Dashboard() {
     setSelectedDay(dayNumber)
     setWorkoutSessionIds(prev => {
       if (prev[dayNumber]) return prev
-      return { ...prev, [dayNumber]: crypto.randomUUID() }
+      return { ...prev, [dayNumber]: createSessionId() }
     })
   }
 
@@ -142,7 +148,7 @@ export default function Dashboard() {
       setSelectedDay(nextDay)
       setWorkoutSessionIds(prev => {
         if (prev[nextDay]) return prev
-        return { ...prev, [nextDay]: crypto.randomUUID() }
+        return { ...prev, [nextDay]: createSessionId() }
       })
     }
   }
@@ -183,7 +189,7 @@ export default function Dashboard() {
   const handleConfirmFinish = async () => {
     try {
       if (sameAsLastTimeSelected && session?.user?.id) {
-        const sessionId = activeSessionId || crypto.randomUUID()
+        const sessionId = activeSessionId || createSessionId()
         if (!activeSessionId) {
           setWorkoutSessionIds(prev => ({ ...prev, [activeDay.dayNumber]: sessionId }))
         }
@@ -225,7 +231,7 @@ export default function Dashboard() {
       }
 
       await refreshDashboard()
-      setWorkoutSessionIds(prev => ({ ...prev, [activeDay.dayNumber]: crypto.randomUUID() }))
+      setWorkoutSessionIds(prev => ({ ...prev, [activeDay.dayNumber]: createSessionId() }))
       setShowFinishModal(false)
       setLoggedMap({})
       setDraftSetsMap({})
