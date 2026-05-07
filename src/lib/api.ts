@@ -114,8 +114,20 @@ export async function getAthleteDashboardData(userId: string) {
     return { hasSchedule: false, data: null }
   }
 
+  type CustomizationRow = {
+    id: string
+    day_sequence_number: number
+    exercise_id: string
+    is_added: boolean
+    custom_tracking_type: 'weight' | 'level' | null
+    initial_weight: number | null
+    order_in_day: number
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    exercises?: any
+  }
+
   // Fetch customizations for this user's schedule - non-blocking (table may not exist yet)
-  let customizations = []
+  let customizations: CustomizationRow[] = []
   try {
     const { data: customizationsData } = await supabase
     .from('user_schedule_customizations')
@@ -533,11 +545,15 @@ export async function getAthleteDashboardData(userId: string) {
     dayNumber: session.dayNumber,
   }))
 
+  const scheduleTemplate = Array.isArray(schedule.workout_templates)
+    ? schedule.workout_templates[0]
+    : schedule.workout_templates
+
   return {
     hasSchedule: true,
     data: {
-      templateName: schedule.workout_templates?.name || 'Workout Plan',
-      templateLevel: schedule.workout_templates?.level || 'General',
+      templateName: scheduleTemplate?.name || 'Workout Plan',
+      templateLevel: scheduleTemplate?.level || 'General',
       todayName,
       mappedBlock,
       upNextDayNumber,

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createWorkoutTemplate, getCurrentSession, getExercises, getUserProfile, getWorkoutTemplateForEdit, updateUserSchedule, updateWorkoutTemplate } from '@/lib/api'
 
-export default function PlanCreator() {
+function PlanCreatorInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const templateId = searchParams.get('templateId')
@@ -267,5 +267,13 @@ export default function PlanCreator() {
         </button>
       </form>
     </main>
+  )
+}
+
+export default function PlanCreator() {
+  return (
+    <Suspense fallback={<main className="container" style={{ marginTop: '2rem' }}>Loading...</main>}>
+      <PlanCreatorInner />
+    </Suspense>
   )
 }

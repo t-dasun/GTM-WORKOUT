@@ -42,7 +42,10 @@ export default function TrainerDashboard() {
     workout_templates?: {
       name?: string
       level?: string | null
-    }
+    } | {
+      name?: string
+      level?: string | null
+    }[]
   }
 
   type ClientRow = {
@@ -431,9 +434,10 @@ export default function TrainerDashboard() {
                         {(historyByClient[client.id] || []).slice(0, 4).map((h) => {
                           const start = new Date(h.started_at).toLocaleDateString()
                           const end = h.ended_at ? new Date(h.ended_at).toLocaleDateString() : 'Present'
+                          const historyTemplate = Array.isArray(h.workout_templates) ? h.workout_templates[0] : h.workout_templates
                           return (
                             <div key={h.id} style={{ fontSize: '0.74rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.4rem 0.55rem' }}>
-                              <span style={{ color: 'var(--text-main)' }}>{h.workout_templates?.name || 'Unknown Plan'}</span>
+                              <span style={{ color: 'var(--text-main)' }}>{historyTemplate?.name || 'Unknown Plan'}</span>
                               <span style={{ color: 'var(--text-muted)' }}> • {start} → {end}</span>
                             </div>
                           )
