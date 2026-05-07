@@ -41,6 +41,7 @@ export default function AuthPage() {
           password,
           options: {
             data: {
+              username,
               full_name: username,
               role,
             }
