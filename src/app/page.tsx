@@ -21,12 +21,9 @@ export default function Home() {
                   Build a plan, follow your next queued day, and review progress without desktop-only layouts slowing you down in the gym.
                 </p>
               </div>
-              <div className="button-row" style={{ width: '100%', maxWidth: '380px' }}>
-                <Link href="/auth/athlete" className="btn btn-primary" style={{ textDecoration: 'none' }}>
+              <div className="landing-cta-row">
+                <Link href="/auth/athlete" className="btn btn-primary landing-cta-btn" style={{ textDecoration: 'none' }}>
                   Athlete Login
-                </Link>
-                <Link href="/auth/trainer" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
-                  Trainer Login
                 </Link>
               </div>
             </div>

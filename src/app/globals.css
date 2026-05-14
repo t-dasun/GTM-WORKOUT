@@ -141,11 +141,11 @@ p { color: var(--text-muted); font-size: 0.9rem; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 0.75rem 1rem;
+  min-height: clamp(34px, 5vw, 40px);
+  padding: clamp(0.4rem, 1.6vw, 0.55rem) clamp(0.9rem, 2.4vw, 1rem);
   border-radius: var(--radius-md);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: clamp(0.84rem, 2.2vw, 0.9rem);
   cursor: pointer;
   transition: transform 0.18s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
   border: 1px solid transparent;
@@ -643,6 +643,55 @@ p { color: var(--text-muted); font-size: 0.9rem; }
   gap: 1rem;
 }
 
+.landing-page {
+  align-items: center;
+}
+
+.landing-page .page-header {
+  align-items: center;
+  text-align: center;
+}
+
+.landing-page .page-subtitle {
+  max-width: 56ch;
+}
+
+.landing-page .hero-card {
+  border-color: rgba(249, 115, 22, 0.22);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(249, 115, 22, 0.15) inset,
+    0 0 28px rgba(249, 115, 22, 0.16);
+}
+
+.landing-page .landing-hero-row {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.landing-page .button-row {
+  justify-content: center;
+  width: 100%;
+  max-width: 200px;
+}
+
+.landing-cta-row {
+  display: flex;
+  justify-content: center;
+}
+
+.landing-cta-btn {
+  min-height: 40px !important;
+  height: 40px;
+  padding: 0 1.25rem !important;
+  font-size: 0.88rem !important;
+  width: auto !important;
+  flex: none !important;
+  white-space: nowrap;
+}
+
 .dashboard-hero-top,
 .schedule-header-row,
 .trainer-header-row,
@@ -910,6 +959,18 @@ p { color: var(--text-muted); font-size: 0.9rem; }
     justify-content: space-between;
   }
 
+  .landing-page .landing-hero-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+
+  .landing-page .button-row {
+    justify-content: flex-start;
+    max-width: 340px;
+  }
+
   .page-subtitle {
     max-width: 60ch;
   }
@@ -940,6 +1001,10 @@ p { color: var(--text-muted); font-size: 0.9rem; }
   .landing-grid {
     grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.95fr);
     align-items: start;
+  }
+
+  .landing-grid {
+    grid-template-columns: 1fr;
   }
 
   .auth-layout--chooser {
@@ -1155,6 +1220,17 @@ p { color: var(--text-muted); font-size: 0.9rem; }
     justify-content: space-between;
   }
 
+  .landing-page .landing-hero-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+  }
+
+  .landing-page .button-row {
+    justify-content: center;
+  }
+
   .dashboard-layout,
   .trainer-layout,
   .history-layout,
@@ -1168,6 +1244,19 @@ p { color: var(--text-muted); font-size: 0.9rem; }
   .dashboard-layout {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+
+  .landing-grid {
+    grid-template-columns: 1fr;
+    max-width: 900px;
+  }
+
+  .landing-page .landing-stack {
+    gap: 1.5rem;
+  }
+
+  .landing-page .landing-card-grid {
+    grid-template-columns: 1fr;
   }
 
   .dashboard-page .page-header {
@@ -1190,11 +1279,6 @@ p { color: var(--text-muted); font-size: 0.9rem; }
 
   .schedule-layout {
     grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.9fr);
-    align-items: start;
-  }
-
-  .landing-grid {
-    grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.9fr);
     align-items: start;
   }
 
@@ -1234,8 +1318,7 @@ p { color: var(--text-muted); font-size: 0.9rem; }
   }
 
   .exercise-grid,
-  .trainer-template-grid,
-  .landing-card-grid {
+  .trainer-template-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
@@ -1314,6 +1397,57 @@ p { color: var(--text-muted); font-size: 0.9rem; }
 
   .page-subtitle {
     font-size: 0.86rem;
+  }
+
+  .landing-page .page-header {
+    align-items: center;
+    text-align: center;
+  }
+
+  .landing-page .page-subtitle {
+    max-width: 36ch;
+  }
+
+  .landing-page .hero-card {
+    padding: 0.9rem !important;
+  }
+
+  .landing-page .landing-hero-row {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .landing-page .button-row {
+    justify-content: center;
+    width: 100%;
+    max-width: 180px;
+  }
+
+  .landing-page .button-row .btn {
+    min-height: clamp(28px, 6.5vw, 32px);
+    padding: clamp(0.2rem, 1.2vw, 0.28rem) 0.75rem;
+    font-size: clamp(0.78rem, 2.4vw, 0.85rem);
+    line-height: 1.2;
+  }
+
+  .landing-page .landing-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .landing-page .landing-card-grid .card {
+    padding: 0.8rem !important;
+    border-radius: 12px;
+  }
+
+  .landing-page .landing-card-grid h4 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .landing-page .landing-card-grid p {
+    font-size: 0.8rem;
   }
 
   .auth-layout--chooser,
