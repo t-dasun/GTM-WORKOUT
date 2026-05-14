@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { deleteTrainerTemplate, findAthleteByUsername, getCurrentSession, getPendingClients, getScheduleHistoryForUsers, getTrainerClients, getTrainerTemplates, getUserProfile, removeTrainerClient, sendTrainerRequest, updateClientStatus, updateUserSchedule } from '@/lib/api'
+import { findAthleteByUsername, getCurrentSession, getPendingClients, getScheduleHistoryForUsers, getTrainerClients, getTrainerTemplates, getUserProfile, removeTrainerClient, sendTrainerRequest, updateClientStatus, updateUserSchedule } from '@/lib/api'
 
 export default function TrainerDashboard() {
   const router = useRouter()
@@ -32,7 +31,6 @@ export default function TrainerDashboard() {
   const [clientSearch, setClientSearch] = useState('')
   const [sortMode, setSortMode] = useState<'recent' | 'name'>('recent')
   const [expandedClients, setExpandedClients] = useState<Record<string, boolean>>({})
-  const [deletingTemplateId, setDeletingTemplateId] = useState<string | null>(null)
 
   type ScheduleHistoryRow = {
     id: string
@@ -132,14 +130,11 @@ export default function TrainerDashboard() {
       setSelectedTemplates(prev => ({ ...prev, [clientId]: '' }))
     } catch (err) {
       console.error(err)
-      alert('Failed to assign template')
+      alert('Failed to assign schedule')
     } finally {
       setAssigningId(null)
     }
   }
-
-  const ownedTemplates = templates.filter(template => template.trainer_id === session?.user?.id)
-  const sharedTemplates = templates.filter(template => !template.trainer_id)
 
   const visibleClients = [...clients]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -161,24 +156,6 @@ export default function TrainerDashboard() {
       const bd = b.linked_at ? new Date(b.linked_at).getTime() : 0
       return bd - ad
     })
-
-  const handleDeleteTemplate = async (templateId: string) => {
-    if (!session) return
-    const ok = window.confirm('Delete this template? This cannot be undone.')
-    if (!ok) return
-
-    setDeletingTemplateId(templateId)
-    try {
-      await deleteTrainerTemplate(session.user.id, templateId)
-      const templateData = await getTrainerTemplates(session.user.id)
-      setTemplates(templateData || [])
-    } catch (err) {
-      console.error(err)
-      alert('Failed to delete template')
-    } finally {
-      setDeletingTemplateId(null)
-    }
-  }
 
   const handleClientRequest = async (clientId: string, status: 'approved' | 'rejected') => {
     if (!session) return
@@ -267,19 +244,26 @@ export default function TrainerDashboard() {
     }
   }
 
-  if (loading) return <main className="container text-center mt-4">Loading dashboard...</main>
+  if (loading) return <main className="container page-shell trainer-page text-center mt-4">Loading dashboard...</main>
 
   return (
-    <main className="container" style={{ marginTop: '2rem', paddingBottom: '4rem' }}>
-      <h2>Trainer Dashboard</h2>
+    <main className="container page-shell trainer-page" style={{ paddingBottom: '4rem' }}>
+      <div className="page-header">
+        <span className="page-eyebrow">Trainer control</span>
+        <h1 className="page-title">Trainer Dashboard</h1>
+        <p className="page-subtitle">Manage client requests, assign plans, and maintain your schedule library from a touch-friendly layout that scales across phone, tablet, and desktop.</p>
+      </div>
+
+      <div className="trainer-layout">
+      <div className="trainer-stack">
       
-      <div className="card" style={{ marginTop: '2rem' }}>
+      <div className="card hero-card" style={{ marginTop: '0' }}>
         <h3 style={{ marginBottom: '0.75rem' }}>Add Client by Username</h3>
         <p className="text-muted" style={{ fontSize: '0.875rem', marginBottom: '1rem' }}>
           Search for an athlete by their exact username to send an access request. They will need to approve it.
         </p>
 
-        <form onSubmit={handleSearchAthlete} className="flex gap-2">
+        <form onSubmit={handleSearchAthlete} className="trainer-inline-actions">
           <input
             className="input-field"
             style={{ flex: 1, marginBottom: 0 }}
@@ -297,7 +281,7 @@ export default function TrainerDashboard() {
         )}
 
         {foundAthlete && !requestSent && (
-          <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'var(--background)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
+          <div className="trainer-list-row" style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'var(--background)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', gap: '0.75rem' }}>
             <div>
               <p style={{ color: 'var(--text-main)', fontWeight: 600, marginBottom: '0.2rem' }}>{foundAthlete.full_name || foundAthlete.email}</p>
               <p style={{ fontSize: '0.75rem' }}>@{foundAthlete.username}</p>
@@ -318,20 +302,20 @@ export default function TrainerDashboard() {
         )}
       </div>
 
-      <div className="card" style={{ marginTop: '2rem' }}>
+      <div className="card" style={{ marginTop: '0' }}>
         <div className="flex justify-between items-center mb-4" style={{ gap: '0.75rem', flexWrap: 'wrap' }}>
           <h3>My Clients</h3>
-          <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
+          <div className="trainer-toolbar">
             <input
-              className="input-field"
-              style={{ marginBottom: 0, minWidth: '180px', padding: '0.5rem 0.65rem' }}
+              className="input-field trainer-filter-control"
+              style={{ marginBottom: 0, padding: '0.5rem 0.65rem' }}
               placeholder="Search @username"
               value={clientSearch}
               onChange={(e) => setClientSearch(e.target.value)}
             />
             <select
-              className="input-field"
-              style={{ marginBottom: 0, padding: '0.5rem 0.65rem', width: '140px' }}
+              className="input-field trainer-filter-control"
+              style={{ marginBottom: 0, padding: '0.5rem 0.65rem' }}
               value={sortMode}
               onChange={(e) => setSortMode(e.target.value as 'recent' | 'name')}
             >
@@ -346,7 +330,7 @@ export default function TrainerDashboard() {
             <h4 style={{ marginBottom: '0.75rem' }}>Pending Requests</h4>
             <div className="flex flex-col gap-2">
               {pendingClients.map(client => (
-                <div key={client.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--background)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                <div key={client.id} className="trainer-list-row" style={{ gap: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--background)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
                   <div style={{ fontWeight: 500 }}>{client.full_name || `@${client.username}` || client.email}</div>
                   <div className="flex gap-2">
                     <button
@@ -383,7 +367,7 @@ export default function TrainerDashboard() {
                   onClick={() => setExpandedClients(prev => ({ ...prev, [client.id]: !prev[client.id] }))}
                   style={{ background: 'none', border: 'none', textAlign: 'left', color: 'inherit', cursor: 'pointer', padding: 0 }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="trainer-list-row">
                     <div>
                       <div style={{ fontWeight: 600 }}>{client.full_name || `@${client.username}` || client.email}</div>
                       <p style={{ fontSize: '0.74rem' }}>@{client.username || 'no-username'} • {currentPlan}</p>
@@ -396,7 +380,7 @@ export default function TrainerDashboard() {
                   <>
                     <div style={{ marginTop: '0.5rem' }}>
                       <label className="text-muted" style={{ fontSize: '0.75rem', display: 'block', marginBottom: '0.25rem' }}>Assign New Plan:</label>
-                      <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
+                      <div className="trainer-inline-actions" style={{ flexWrap: 'wrap' }}>
                         <select 
                           className="input-field" 
                           style={{ flex: 1, minWidth: '220px', padding: '0.5rem', fontSize: '0.875rem', marginBottom: 0 }}
@@ -404,7 +388,7 @@ export default function TrainerDashboard() {
                           value={selectedTemplates[client.id] || ''}
                           disabled={assigningId === client.id}
                         >
-                          <option value="" disabled>Select a Template...</option>
+                          <option value="" disabled>Select a Schedule...</option>
                           {templates.map(t => (
                             <option key={t.id} value={t.id}>{t.name} ({t.level})</option>
                           ))}
@@ -457,74 +441,7 @@ export default function TrainerDashboard() {
           )}
         </div>
       </div>
-
-      <div className="card" style={{ marginTop: '2rem' }}>
-        <div className="flex justify-between items-center mb-4">
-          <h3>Workout Templates</h3>
-          <Link href="/plan/create" className="btn btn-secondary" style={{ textDecoration: 'none', padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}>
-            + Create New
-          </Link>
-        </div>
-
-        {ownedTemplates.length > 0 && (
-          <div style={{ marginBottom: '1rem' }}>
-            <h4 style={{ marginBottom: '0.75rem' }}>My Saved Schedules</h4>
-            <div className="flex flex-col gap-2">
-              {ownedTemplates.map(template => (
-                <div key={template.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', backgroundColor: 'var(--background)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
-                  <div>
-                    <div style={{ fontWeight: 500 }}>{template.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{template.level}</div>
-                  </div>
-                  <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
-                    <Link
-                      href={`/plan/create?templateId=${template.id}`}
-                      className="btn btn-secondary"
-                      style={{ textDecoration: 'none', padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      className="btn btn-secondary"
-                      style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', color: '#ef4444', borderColor: '#ef4444' }}
-                      disabled={deletingTemplateId === template.id}
-                      onClick={() => handleDeleteTemplate(template.id)}
-                    >
-                      {deletingTemplateId === template.id ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div>
-          <h4 style={{ marginBottom: '0.75rem' }}>Shared Seed Schedules</h4>
-          <div className="flex flex-col gap-2">
-          {sharedTemplates.map(template => (
-            <div key={template.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', backgroundColor: 'var(--background)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
-              <div>
-                <div style={{ fontWeight: 500 }}>{template.name}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{template.level}</div>
-              </div>
-              <div className="flex gap-2 items-center">
-                <Link
-                  href={`/plan/create?templateId=${template.id}`}
-                  className="btn btn-secondary"
-                  style={{ textDecoration: 'none', padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}
-                >
-                  Customize
-                </Link>
-                <span style={{ fontSize: '0.75rem', color: '#10b981', border: '1px solid #10b981', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Shared</span>
-              </div>
-            </div>
-          ))}
-          {sharedTemplates.length === 0 && ownedTemplates.length === 0 && (
-            <p className="text-muted text-center" style={{ fontSize: '0.875rem' }}>No templates available.</p>
-          )}
-          </div>
-        </div>
+      </div>
       </div>
     </main>
   )

@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.variable}>
         <Navigation />
-        <div style={{ paddingBottom: '2rem' }}>
+        <div className="app-shell app-content">
           {children}
         </div>
       </body>

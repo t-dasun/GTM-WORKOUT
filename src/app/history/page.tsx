@@ -231,13 +231,15 @@ export default function HistoryPage() {
     totalVolume: 'Total Volume (kg)',
     setWeight: `Set ${setIndex} Weight (kg)`,
   }
+  const selectedExerciseName = exercises.find(ex => ex.id === selectedExercise)?.name || 'Exercise'
 
   return (
-    <main className="container" style={{ marginTop: '1.5rem', paddingBottom: '5rem' }}>
-      <div className="flex justify-between items-center" style={{ marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+    <main className="container page-shell history-page" style={{ paddingBottom: '5rem' }}>
+      <div className="page-header history-header-row" style={{ marginBottom: '0.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
         <div>
-          <h2 style={{ marginBottom: '0.1rem' }}>Workout History</h2>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>All logged sessions & exercise progression</p>
+          <span className="page-eyebrow">Progress tracking</span>
+          <h1 className="page-title">Workout History</h1>
+          <p className="page-subtitle">Review logged sessions, exercise progression, and workload trends with controls that stay usable on smaller screens.</p>
         </div>
       </div>
 
@@ -257,7 +259,7 @@ export default function HistoryPage() {
       </div>
 
       {/* Summary stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem', marginBottom: '1.25rem' }}>
+      <div className="history-summary-grid" style={{ marginBottom: '1.25rem' }}>
         {[
           { label: 'Sessions', value: totalSessionsInRange },
           { label: 'Total Volume', value: `${Math.round(totalVolumeInRange / 1000 * 10) / 10} t` },
@@ -272,9 +274,28 @@ export default function HistoryPage() {
 
       {/* Progression chart */}
       <div className="card" style={{ marginBottom: '1.25rem' }}>
-        <h3 style={{ marginBottom: '0.75rem' }}>Exercise Progression</h3>
+        <h3 style={{ marginBottom: '0.25rem' }}>Exercise Progression</h3>
+        <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginBottom: '0.7rem' }}>
+          Tracking: <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{selectedExerciseName}</span>
+        </p>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.85rem' }}>
+        <div className="history-exercise-selector hide-scrollbar" style={{ marginBottom: '0.75rem' }}>
+          {exercises.length === 0 && (
+            <span className="history-exercise-pill active">No exercises logged yet</span>
+          )}
+          {exercises.map((ex) => (
+            <button
+              key={ex.id}
+              type="button"
+              className={`history-exercise-pill${selectedExercise === ex.id ? ' active' : ''}`}
+              onClick={() => setSelectedExercise(ex.id)}
+            >
+              {ex.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="history-toolbar" style={{ marginBottom: '0.85rem' }}>
           <select
             className="input-field"
             style={{ flex: '1 1 180px', marginBottom: 0, fontSize: '0.82rem', padding: '0.45rem' }}

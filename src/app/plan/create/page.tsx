@@ -149,30 +149,33 @@ function PlanCreatorInner() {
       router.push('/dashboard')
     } catch (err) {
       console.error(err)
-      alert('Failed to save plan')
+      alert('Failed to save schedule')
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading) return <main className="container text-center mt-4">Loading...</main>
+  if (loading) return <main className="container page-shell plan-page text-center mt-4">Loading...</main>
 
   const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
   return (
-    <main className="container" style={{ marginTop: '2rem', paddingBottom: '4rem' }}>
-      <h2>{isEditMode ? 'Edit Workout Plan' : 'Create Workout Plan'}</h2>
-      <p className="text-muted mb-4">
+    <main className="container page-shell plan-page" style={{ paddingBottom: '4rem' }}>
+      <div className="page-header">
+        <span className="page-eyebrow">Schedule builder</span>
+        <h1 className="page-title">{isEditMode ? 'Edit Workout Schedule' : 'Create Workout Schedule'}</h1>
+        <p className="page-subtitle">
         {isEditMode
-          ? (editingGlobalTemplate ? 'Customize this shared template and save it to your own trainer library.' : 'Update your template structure and exercises.')
-          : 'Build your template and assign it to your schedule.'}
-      </p>
+          ? (editingGlobalTemplate ? 'Customize this shared schedule and save it to your own trainer schedule library.' : 'Update your schedule structure and exercises.')
+          : 'Build your schedule and assign it to your account.'}
+        </p>
+      </div>
       
       <form onSubmit={handleSave}>
-        <div className="card">
-          <h3>1. Template Details</h3>
+        <div className="card hero-card">
+          <h3>1. Schedule Details</h3>
           <div className="input-group mt-4">
-            <label className="input-label">Plan Name</label>
+            <label className="input-label">Schedule Name</label>
             <input className="input-field" value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. 3-Day PPL" />
           </div>
           <div className="input-group">
@@ -186,14 +189,14 @@ function PlanCreatorInner() {
         </div>
 
         <div className="card mt-4">
-          <div className="flex justify-between items-center mb-4">
+          <div className="plan-header-row mb-4">
             <h3>2. Workout Days</h3>
             <button type="button" className="btn btn-secondary" onClick={addDay} style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}>+ Add Day</button>
           </div>
           
           {days.map((day, dIdx) => (
-            <div key={dIdx} style={{ backgroundColor: 'var(--background)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', border: '1px solid var(--border)' }}>
-              <div className="flex justify-between items-center mb-4">
+            <div key={dIdx} className="plan-day-card" style={{ backgroundColor: 'var(--background)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', border: '1px solid var(--border)' }}>
+              <div className="plan-header-row mb-4">
                 <h4 style={{ margin: 0 }}>Day {day.id}</h4>
                 <button type="button" className="btn btn-primary" onClick={() => addExercise(dIdx)} style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}>+ Add Exercise</button>
               </div>
@@ -205,18 +208,18 @@ function PlanCreatorInner() {
                   const trackingType = selectedExercise?.trackingType || 'weight'
                   const metricLabel = trackingType === 'level' ? 'Level' : 'Weight (kg)'
                   return (
-                  <div key={eIdx} className="flex flex-col gap-2" style={{ padding: '0.75rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-sm)' }}>
-                    <div className="flex justify-between mb-2">
+                  <div key={eIdx} className="plan-exercise-card flex flex-col gap-2" style={{ padding: '0.75rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-sm)' }}>
+                    <div className="plan-exercise-header plan-header-row mb-2">
                       <select className="input-field" style={{ flex: 1, padding: '0.5rem', marginBottom: 0 }} value={ex.exerciseId} onChange={e => updateExercise(dIdx, eIdx, 'exerciseId', e.target.value)}>
                         {availableExercises.map(a => (
                           <option key={a.id} value={a.id}>{a.name}</option>
                         ))}
                       </select>
-                      <button type="button" onClick={() => removeExercise(dIdx, eIdx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0 0.5rem' }}>X</button>
+                      <button type="button" className="plan-remove-icon" onClick={() => removeExercise(dIdx, eIdx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0 0.5rem' }}>X</button>
                     </div>
                     
                     <div className="flex flex-col gap-2">
-                      <div className="flex gap-2 text-muted" style={{ fontSize: '0.75rem', padding: '0 0.25rem' }}>
+                      <div className="plan-set-labels flex gap-2 text-muted" style={{ fontSize: '0.75rem', padding: '0 0.25rem' }}>
                         <span style={{ width: '40px' }}>Set</span>
                         <span style={{ flex: 1 }}>Reps</span>
                         <span style={{ flex: 1 }}>{metricLabel}</span>
@@ -224,11 +227,11 @@ function PlanCreatorInner() {
                       </div>
                       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                       {ex.setsData.map((s: any, sIdx: number) => (
-                        <div key={sIdx} className="flex gap-2 items-center">
-                          <span style={{ width: '40px', fontWeight: 500, textAlign: 'center' }}>{s.setNumber}</span>
-                          <input type="number" className="input-field" style={{ flex: 1, padding: '0.5rem', marginBottom: 0 }} value={s.reps} onChange={e => updateSet(dIdx, eIdx, sIdx, 'reps', Number(e.target.value))} />
-                          <input type="number" step={trackingType === 'level' ? 1 : 0.5} min={trackingType === 'level' ? 1 : 0} className="input-field" style={{ flex: 1, padding: '0.5rem', marginBottom: 0 }} value={s.weight} onChange={e => updateSet(dIdx, eIdx, sIdx, 'weight', Number(e.target.value))} />
-                          <button type="button" onClick={() => removeSetFromExercise(dIdx, eIdx, sIdx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', width: '30px' }}>×</button>
+                        <div key={sIdx} className="plan-set-grid plan-set-row">
+                          <span className="plan-set-number" style={{ width: '40px', fontWeight: 500, textAlign: 'center' }}>{s.setNumber}</span>
+                          <input type="number" className="input-field plan-set-input" style={{ flex: 1, padding: '0.5rem', marginBottom: 0 }} value={s.reps} onChange={e => updateSet(dIdx, eIdx, sIdx, 'reps', Number(e.target.value))} />
+                          <input type="number" step={trackingType === 'level' ? 1 : 0.5} min={trackingType === 'level' ? 1 : 0} className="input-field plan-set-input" style={{ flex: 1, padding: '0.5rem', marginBottom: 0 }} value={s.weight} onChange={e => updateSet(dIdx, eIdx, sIdx, 'weight', Number(e.target.value))} />
+                          <button type="button" className="plan-set-remove" onClick={() => removeSetFromExercise(dIdx, eIdx, sIdx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', width: '30px' }}>×</button>
                         </div>
                       ))}
                     </div>
@@ -248,7 +251,7 @@ function PlanCreatorInner() {
             <p className="text-muted" style={{ fontSize: '0.875rem', marginBottom: '1rem' }}>Map your days of the week to the workout days above.</p>
             <div className="flex flex-col gap-2">
               {weekDays.map(wd => (
-                <div key={wd} className="flex justify-between items-center" style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--border)' }}>
+                <div key={wd} className="plan-mapping-row" style={{ padding: '0.65rem 0', borderBottom: '1px solid var(--border)' }}>
                   <span style={{ fontWeight: 500 }}>{wd}</span>
                   <select className="input-field" style={{ padding: '0.5rem', width: '150px', marginBottom: 0 }} value={scheduleMapping[wd]} onChange={e => setScheduleMapping({...scheduleMapping, [wd]: e.target.value})}>
                     <option value="Rest">Rest</option>
@@ -263,7 +266,7 @@ function PlanCreatorInner() {
         )}
 
         <button type="submit" className="btn btn-primary w-full mt-4" disabled={saving}>
-          {saving ? 'Saving...' : (isEditMode ? (editingGlobalTemplate ? 'Save As My Template' : 'Save Changes') : (userRole === 'trainer' ? 'Save Template' : 'Save & Apply to Dashboard'))}
+          {saving ? 'Saving...' : (isEditMode ? (editingGlobalTemplate ? 'Save As My Schedule' : 'Save Changes') : (userRole === 'trainer' ? 'Save Schedule' : 'Save & Apply to Dashboard'))}
         </button>
       </form>
     </main>
@@ -272,7 +275,7 @@ function PlanCreatorInner() {
 
 export default function PlanCreator() {
   return (
-    <Suspense fallback={<main className="container" style={{ marginTop: '2rem' }}>Loading...</main>}>
+    <Suspense fallback={<main className="container page-shell plan-page" style={{ marginTop: '2rem' }}>Loading...</main>}>
       <PlanCreatorInner />
     </Suspense>
   )

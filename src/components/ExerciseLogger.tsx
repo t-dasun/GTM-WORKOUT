@@ -22,6 +22,8 @@ export default function ExerciseLogger({
   logKey,
   sessionId,
   sessionDayNumber,
+  isOpen: controlledIsOpen,
+  onToggle,
 }: {
   exercise: Exercise
   userId: string
@@ -32,12 +34,16 @@ export default function ExerciseLogger({
   logKey?: string
   sessionId?: string
   sessionDayNumber?: number
+  isOpen?: boolean
+  onToggle?: () => void
 }) {
   const [setsData, setSetsData] = useState(exercise.setsData.map(s => ({ ...s })))
   const [completedSets, setCompletedSets] = useState<boolean[]>(exercise.setsData.map(() => false))
   const [isLogged, setIsLogged] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
+
+  const isOpen = controlledIsOpen ?? internalIsOpen
 
   const effectiveLogged = isLogged || !!forceLogged
   const effectiveDone = effectiveLogged ? setsData.length : (autoSelectAll ? setsData.length : completedSets.filter(Boolean).length)
@@ -45,6 +51,7 @@ export default function ExerciseLogger({
   const total = setsData.length
   const metricLabel = exercise.trackingType === 'level' ? 'Level' : 'Weight (kg)'
   const metricFormatter = (v: number | null | undefined) => exercise.trackingType === 'level' ? `L${v ?? '-'}` : `${v ?? '-'} kg`
+  const firstSet = setsData[0]
 
   const toggleSet = (idx: number) => {
     if (isLogged) return
@@ -85,18 +92,26 @@ export default function ExerciseLogger({
     onSetsDataChange?.(logKey || exercise.id, newData)
   }
 
+  const handleToggle = () => {
+    if (onToggle) {
+      onToggle()
+      return
+    }
+    setInternalIsOpen(prev => !prev)
+  }
+
   return (
-    <div className="card" style={{
+    <div className="card exercise-logger" style={{
       display: 'flex', flexDirection: 'column', gap: '0.9rem',
       borderColor: effectiveLogged ? 'rgba(249, 115, 22, 0.85)' : doneCount > 0 ? 'rgba(249, 115, 22, 0.4)' : 'rgba(63, 63, 70, 0.95)',
       background: 'linear-gradient(180deg, rgba(24,24,27,0.98), rgba(18,18,20,0.98))'
     }}>
       <button
         type="button"
-        onClick={() => setIsOpen(prev => !prev)}
+        onClick={handleToggle}
         style={{ background: 'none', border: 'none', color: 'inherit', textAlign: 'left', padding: 0, cursor: 'pointer' }}
       >
-        <div className="flex justify-between items-center" style={{ gap: '0.75rem' }}>
+        <div className="exercise-card-row" style={{ gap: '0.75rem' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
               <h4 style={{ marginBottom: 0 }}>{exercise.name}</h4>
@@ -107,22 +122,24 @@ export default function ExerciseLogger({
               ))}
             </div>
             <p style={{ fontSize: '0.78rem', margin: 0 }}>
-              Plan: {setsData.length} × {setsData[0]?.reps ?? '-'} @ {metricFormatter(setsData[0]?.weight)}
+              Plan: {setsData.length} × {firstSet?.reps ?? '-'} @ {metricFormatter(firstSet?.weight)}
             </p>
             {exercise.lastSession && (
               <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>
                 Prev best: {exercise.lastSession.reps ?? '-'} reps @ {metricFormatter(exercise.lastSession.weight)}
               </p>
             )}
+            <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>
+              {effectiveLogged ? 'Logged' : doneCount > 0 ? `${doneCount} sets selected` : 'Tap to expand and edit sets'}
+            </p>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem', flexShrink: 0 }}>
-            <span style={{
-              fontSize: '0.78rem', fontWeight: 700,
-              color: effectiveLogged ? 'var(--primary)' : doneCount > 0 ? 'rgba(249,115,22,0.8)' : 'var(--text-main)'
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexShrink: 0 }}>
+            <span className="exercise-progress-ring" style={{
+              color: effectiveLogged ? 'var(--primary)' : doneCount > 0 ? 'rgba(249,115,22,0.85)' : 'var(--text-main)',
+              borderColor: effectiveLogged || doneCount > 0 ? 'rgba(249,115,22,0.8)' : 'var(--border)'
             }}>
-              {effectiveLogged ? `✓ ${total}/${total}` : `${doneCount}/${total}`}
+              {effectiveLogged ? `${total}/${total}` : `${doneCount}/${total}`}
             </span>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{isOpen ? '−' : '+'}</span>
           </div>
         </div>
       </button>
@@ -147,13 +164,13 @@ export default function ExerciseLogger({
           {setsData.map((s, idx) => {
             const done = autoSelectAll || completedSets[idx]
             return (
-              <div key={idx} style={{
+              <div key={idx} className="exercise-set-tile" style={{
                 display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.8rem',
                 borderRadius: '14px', border: `1px solid ${done ? 'rgba(249,115,22,0.5)' : 'var(--border)'}`,
                 background: done ? 'rgba(249,115,22,0.07)' : 'rgba(9, 9, 11, 0.72)',
                 opacity: effectiveLogged && !done ? 0.5 : 1
               }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '44px minmax(0,1fr) minmax(0,1fr) 44px', gap: '0.6rem', alignItems: 'center', width: '100%' }}>
+                <div className="exercise-logger-set-grid" style={{ width: '100%' }}>
                   <span style={{
                     width: '36px', height: '36px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     borderRadius: '12px', background: done ? 'rgba(249,115,22,0.25)' : 'var(--surface-hover)',

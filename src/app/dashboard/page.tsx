@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ExerciseLogger from '@/components/ExerciseLogger'
 import Link from 'next/link'
@@ -14,6 +14,9 @@ const createSessionId = () => {
 
 export default function Dashboard() {
   const router = useRouter()
+  const workoutDaysRef = useRef<HTMLDivElement | null>(null)
+  const thisWeekRef = useRef<HTMLDivElement | null>(null)
+  const recentSessionsRef = useRef<HTMLDivElement | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [session, setSession] = useState<any>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,6 +35,8 @@ export default function Dashboard() {
   const [finishWeight, setFinishWeight] = useState('')
   const [workoutSessionIds, setWorkoutSessionIds] = useState<Record<number, string>>({})
   const [draftSetsMap, setDraftSetsMap] = useState<Record<string, { setNumber: number, reps: number, weight: number }[]>>({})
+  const [isWorkoutLogExpanded, setIsWorkoutLogExpanded] = useState(true)
+  const [expandedExerciseKey, setExpandedExerciseKey] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -88,7 +93,7 @@ export default function Dashboard() {
   }, [selectedDay])
 
   if (loading) {
-    return <main className="container" style={{ marginTop: '4rem', textAlign: 'center' }}>Loading dashboard...</main>
+    return <main className="container page-shell dashboard-page" style={{ textAlign: 'center' }}>Loading dashboard...</main>
   }
 
   if (!hasSchedule || !dashboardData) {
@@ -98,7 +103,7 @@ export default function Dashboard() {
         <p className="mb-4 text-muted" style={{ color: 'var(--text-muted)' }}>You don&apos;t have any upcoming workouts. Wait for your trainer to assign one, or create your own schedule.</p>
         <div className="card text-center" style={{ borderColor: 'var(--primary)', marginTop: '2rem' }}>
           <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>Create a Plan</h3>
-          <p className="mb-4" style={{ fontSize: '0.875rem' }}>Since your database is fresh, you&apos;ll need to set up a workout template and assign it to your schedule before you can log exercises.</p>
+          <p className="mb-4" style={{ fontSize: '0.875rem' }}>Since your database is fresh, you&apos;ll need to set up a workout schedule and assign it before you can log exercises.</p>
           <Link href="/athlete/schedule" className="btn btn-primary w-full" style={{ textDecoration: 'none' }}>
             Go to Schedule Settings
           </Link>
@@ -126,16 +131,47 @@ export default function Dashboard() {
   }
 
   const volumeTrendLabel = insights.sessionIncreased ? '↑ Improved' : '→ Stable'
+  const lastSessionDateLabel = insights.recentSessions?.[0]?.date
+    ? new Date(insights.recentSessions[0].date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    : 'No sessions'
+  const weekInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+  const compactWeekSummary = weekInitials.map((label, idx) => {
+    const row = insights.weekSummary?.[idx] as { status?: string; mapped?: string } | undefined
+    const normalizedStatus = row?.mapped === 'Rest'
+      ? 'rest'
+      : (row?.status === 'done' || row?.status === 'done-late' || row?.status === 'missed' || row?.status === 'queued'
+        ? row.status
+        : 'rest')
+
+    return {
+      label,
+      status: normalizedStatus,
+    }
+  })
 
   // Use day + tile index + exercise id to avoid collisions when same exercise appears on multiple days
   const getLogKey = (dayNumber: number, exerciseId: string, idx: number) => `${dayNumber}::${exerciseId}::${idx}`
 
   const selectDay = (dayNumber: number) => {
     setSelectedDay(dayNumber)
+    setExpandedExerciseKey(null)
     setWorkoutSessionIds(prev => {
       if (prev[dayNumber]) return prev
       return { ...prev, [dayNumber]: createSessionId() }
     })
+  }
+
+  const scrollToWorkoutDays = () => {
+    workoutDaysRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const handleStartWorkout = () => {
+    selectDay(dashboardData.upNextDayNumber)
+    setTimeout(() => scrollToWorkoutDays(), 60)
   }
 
   const refreshDashboard = async (opts?: { preserveSelectedDay?: boolean }) => {
@@ -144,7 +180,9 @@ export default function Dashboard() {
     setHasSchedule(sched)
     if (data) {
       setDashboardData(data)
-      const nextDay = opts?.preserveSelectedDay && selectedDay ? selectedDay : data.upNextDayNumber
+      const shouldPreserve = opts?.preserveSelectedDay ?? true
+      const hasSelectedDay = typeof selectedDay === 'number' && data.days.some((d: { dayNumber: number }) => d.dayNumber === selectedDay)
+      const nextDay = shouldPreserve && hasSelectedDay ? selectedDay : data.upNextDayNumber
       setSelectedDay(nextDay)
       setWorkoutSessionIds(prev => {
         if (prev[nextDay]) return prev
@@ -245,8 +283,14 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="container" style={{ marginTop: '1rem', paddingBottom: '5rem' }}>
-      <div className="card" style={{
+    <main className="container page-shell dashboard-page" style={{ paddingBottom: '5rem' }}>
+      <div className="page-header">
+        <span className="page-eyebrow">Athlete view</span>
+        <h1 className="page-title">Training Dashboard</h1>
+        <p className="page-subtitle">Track today&apos;s queue, log sets quickly, and review recovery insights from a layout tuned for mobile, tablet, and desktop.</p>
+      </div>
+
+      <div className="card hero-card" style={{
         borderColor: 'rgba(249, 115, 22, 0.45)',
         background: 'radial-gradient(circle at top right, rgba(249,115,22,0.22), rgba(24,24,27,0.98) 55%)',
         boxShadow: '0 24px 60px rgba(0, 0, 0, 0.24)',
@@ -265,7 +309,7 @@ export default function Dashboard() {
           🔥 Queued from Tuesday · won&apos;t break your cycle
         </p>
 
-        <div className="flex justify-between items-center" style={{ gap: '0.75rem' }}>
+        <div className="dashboard-hero-top" style={{ gap: '0.75rem' }}>
           <div>
             <h2 style={{ marginBottom: '0.35rem', fontSize: '1.8rem' }}>Up next: <span style={{ color: 'var(--primary)' }}>{upNextDayText}</span></h2>
             <p style={{ marginBottom: '0.25rem', fontSize: '0.92rem' }}>{dashboardData.templateLevel} • {activeSummary}</p>
@@ -275,48 +319,60 @@ export default function Dashboard() {
           <button
             className="btn btn-primary"
             style={{ whiteSpace: 'nowrap', padding: '0.85rem 1rem', boxShadow: '0 12px 32px rgba(249, 115, 22, 0.28)' }}
-            onClick={() => selectDay(dashboardData.upNextDayNumber)}
+            onClick={handleStartWorkout}
           >
             Start workout
           </button>
         </div>
 
-        <div className="flex gap-2" style={{ marginTop: '0.9rem', flexWrap: 'wrap' }}>
-          <div className="card" style={{ marginBottom: 0, padding: '0.6rem 0.75rem', flex: 1, minWidth: '110px', background: 'rgba(9, 9, 11, 0.45)' }}>
-            <p style={{ fontSize: '0.7rem' }}>EST. DURATION</p>
-            <p style={{ color: 'var(--text-main)', fontWeight: 700, fontSize: '0.95rem' }}>{insights.estimatedDurationMin} min</p>
+        <div className="dashboard-metrics" style={{ marginTop: '0.9rem' }}>
+          <div
+            className="card"
+            style={{ marginBottom: 0, padding: '0.6rem 0.75rem', flex: 1, minWidth: '110px', background: 'rgba(9, 9, 11, 0.45)', textAlign: 'center', cursor: 'pointer' }}
+            onClick={() => scrollToSection(thisWeekRef)}
+          >
+            <p style={{ fontSize: '0.7rem' }}>WEEK SUMMARY</p>
+            <div className="dashboard-week-mini">
+              {compactWeekSummary.map((day, idx) => (
+                <span key={`${day.label}-${idx}`} className={`dashboard-week-day status-${day.status}`}>
+                  {day.label}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="card" style={{ marginBottom: 0, padding: '0.6rem 0.75rem', flex: 1, minWidth: '110px', background: 'rgba(9, 9, 11, 0.45)' }}>
-            <p style={{ fontSize: '0.7rem' }}>LAST SESSION</p>
+          <div className="card" style={{ marginBottom: 0, padding: '0.6rem 0.75rem', flex: 1, minWidth: '110px', background: 'rgba(9, 9, 11, 0.45)', textAlign: 'center' }}>
+            <p style={{ fontSize: '0.7rem' }}>LAST SESSION WEIGHT</p>
             <p style={{ color: 'var(--text-main)', fontWeight: 700, fontSize: '0.95rem' }}>{Math.round(insights.lastSessionVolume).toLocaleString()} kg</p>
             <p style={{ fontSize: '0.7rem', color: insights.sessionIncreased ? '#f97316' : 'var(--text-muted)' }}>{volumeTrendLabel}</p>
           </div>
-          <div className="card" style={{ marginBottom: 0, padding: '0.6rem 0.75rem', flex: 1, minWidth: '110px', background: 'rgba(9, 9, 11, 0.45)' }}>
-            <p style={{ fontSize: '0.7rem' }}>STREAK</p>
-            <p style={{ color: 'var(--text-main)', fontWeight: 700, fontSize: '0.95rem' }}>{insights.streak} day{insights.streak === 1 ? '' : 's'}</p>
+          <div
+            className="card"
+            style={{ marginBottom: 0, padding: '0.6rem 0.75rem', flex: 1, minWidth: '110px', background: 'rgba(9, 9, 11, 0.45)', textAlign: 'center', cursor: 'pointer' }}
+            onClick={() => scrollToSection(recentSessionsRef)}
+          >
+            <p style={{ fontSize: '0.7rem' }}>LAST SESSION DATE</p>
+            <p style={{ color: 'var(--text-main)', fontWeight: 700, fontSize: '0.95rem' }}>{lastSessionDateLabel}</p>
+            <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Tap to view recent</p>
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-      <div className="card" style={{ marginBottom: '0', padding: '0.9rem' }}>
-        <div className="flex justify-between items-center mb-4" style={{ gap: '0.5rem', marginBottom: '0.75rem' }}>
-          <div>
+      <div className="stack-md">
+      <div ref={workoutDaysRef} className="card" style={{ marginBottom: '0', padding: '0.9rem' }}>
+        <div className="mb-4" style={{ marginBottom: '0.75rem', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <h3 style={{ marginBottom: '0.15rem' }}>Workout days</h3>
             <p style={{ fontSize: '0.75rem' }}>Tap a day to expand its exercises and log your session.</p>
           </div>
-          <Link href="/athlete/schedule" className="btn btn-secondary" style={{ textDecoration: 'none', fontSize: '0.75rem', padding: '0.5rem 0.75rem', whiteSpace: 'nowrap' }}>
-            Schedule
-          </Link>
         </div>
-        <div className="hide-scrollbar" style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.1rem', flex: 1, WebkitOverflowScrolling: 'touch' }}>
+        <div className="hide-scrollbar chip-scroll dashboard-day-strip" style={{ paddingBottom: '0.1rem', flex: 1, WebkitOverflowScrolling: 'touch' }}>
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {dashboardData.days.map((day: any) => (
             <button
               key={day.id}
               className={selectedDay === day.dayNumber ? 'btn btn-primary' : 'btn btn-secondary'}
               onClick={() => selectDay(day.dayNumber)}
-              style={{ minWidth: '110px', padding: '0.7rem 0.8rem', fontSize: '0.78rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.2rem' }}
+              style={{ minWidth: '110px', padding: '0.7rem 0.8rem', fontSize: '0.78rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '0.2rem' }}
             >
               <span>Day {day.dayNumber}</span>
               <span style={{ fontSize: '0.68rem', opacity: 0.85 }}>{day.exercises.length} exercise{day.exercises.length === 1 ? '' : 's'}</span>
@@ -325,16 +381,42 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem', alignItems: 'start' }}>
-      <div>
+      <div className="dashboard-layout" style={{ alignItems: 'start' }}>
+      <div className="dashboard-main-stack">
       <div className="card" style={{ marginBottom: 0, padding: '1rem' }}>
-        <p style={{ fontSize: '0.72rem', letterSpacing: '0.08em', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
-          Day {activeDay.dayNumber}
-        </p>
-        <h3 style={{ marginBottom: '0.2rem' }}>{dashboardData.templateName}</h3>
-        <p style={{ fontSize: '0.8rem', marginBottom: '1rem' }}>{activeSummary}</p>
+        <button
+          type="button"
+          onClick={() => setIsWorkoutLogExpanded(prev => !prev)}
+          style={{
+            width: '100%',
+            border: 'none',
+            background: 'transparent',
+            color: 'inherit',
+            padding: 0,
+            cursor: 'pointer'
+          }}
+          aria-expanded={isWorkoutLogExpanded}
+          aria-label={isWorkoutLogExpanded ? 'Collapse workout log tile' : 'Expand workout log tile'}
+        >
+          <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <p style={{ fontSize: '0.72rem', letterSpacing: '0.08em', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
+              Day {activeDay.dayNumber}
+            </p>
+            <h3 style={{ marginBottom: '0.2rem' }}>{dashboardData.templateName}</h3>
+            <p style={{ fontSize: '0.8rem', marginBottom: 0 }}>
+              {activeDay.exercises.length} exercise{activeDay.exercises.length === 1 ? '' : 's'}
+            </p>
+            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.45rem' }}>
+              {isWorkoutLogExpanded ? 'Tap to collapse' : 'Tap to expand'}
+            </p>
+          </div>
+        </button>
 
-      <div className="flex flex-col gap-4">
+        {isWorkoutLogExpanded && (
+          <>
+            <p style={{ fontSize: '0.8rem', marginBottom: '1rem', textAlign: 'center' }}>{activeSummary}</p>
+
+      <div className="dashboard-exercise-list">
         {activeDay.exercises.length === 0 && (
           <div className="card text-center" style={{ borderStyle: 'dashed' }}>
             <h3>No exercises in Day {activeDay.dayNumber}</h3>
@@ -378,6 +460,8 @@ export default function Dashboard() {
               onSetsDataChange={handleSetsDraftChange}
               autoSelectAll={sameAsLastTimeSelected && loggedMap[logKey] === undefined}
               forceLogged={loggedMap[logKey] !== undefined}
+              isOpen={expandedExerciseKey === logKey}
+              onToggle={() => setExpandedExerciseKey(prev => prev === logKey ? null : logKey)}
             />
           )
         })}
@@ -404,6 +488,8 @@ export default function Dashboard() {
           </button>
         )
       })()}
+          </>
+        )}
       </div>
 
       {/* Finish Workout Modal */}
@@ -425,7 +511,7 @@ export default function Dashboard() {
             <h3 style={{ marginBottom: '0.3rem' }}>Finish Workout?</h3>
             <p style={{ fontSize: '0.8rem', marginBottom: '1.1rem' }}>Review which exercises you completed. Only logged exercises count toward your session.</p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
+            <div className="list-stack" style={{ marginBottom: '1.25rem' }}>
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {activeDay.exercises.map((ex: any, idx: number) => {
                 const logKey = getLogKey(activeDay.dayNumber, ex.id, idx)
@@ -476,7 +562,7 @@ export default function Dashboard() {
               />
             </div>
 
-            <div className="flex gap-2">
+            <div className="dashboard-modal-actions">
               <button
                 className="btn btn-secondary"
                 style={{ flex: 1 }}
@@ -497,7 +583,7 @@ export default function Dashboard() {
       )}
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="dashboard-side-stack">
         {pendingRequests.length > 0 && (
           <div className="card" style={{ marginBottom: 0, borderColor: 'rgba(249, 115, 22, 0.45)' }}>
             <h3 style={{ marginBottom: '0.75rem', color: 'var(--primary)' }}>Trainer Request</h3>
@@ -535,7 +621,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className="card" style={{ marginBottom: 0 }}>
+        <div ref={thisWeekRef} className="card" style={{ marginBottom: 0 }}>
           <h3 style={{ marginBottom: '0.8rem' }}>This Week</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
             {insights.weekSummary.map((day: { dayName: string, mapped: string, status: string }) => {
@@ -546,8 +632,8 @@ export default function Dashboard() {
               const isRest = day.mapped === 'Rest'
               const iconMap: Record<string, string> = { done: '✓', 'done-late': '↺', queued: '→', missed: '✗', rest: '·' }
               const icon = isRest ? iconMap.rest : iconMap[day.status] || '·'
-              const iconColor = isDone || isDoneLate ? '#f97316' : isMissed ? '#ef4444' : isQueued ? 'rgba(249,115,22,0.7)' : 'var(--text-muted)'
-              const rowBg = isDone || isDoneLate ? 'rgba(249,115,22,0.08)' : isMissed ? 'rgba(239,68,68,0.06)' : 'transparent'
+              const iconColor = isDone ? '#22c55e' : isDoneLate ? '#38bdf8' : isMissed ? '#ef4444' : isQueued ? 'rgba(249,115,22,0.78)' : 'var(--text-muted)'
+              const rowBg = isDone ? 'rgba(34,197,94,0.10)' : isDoneLate ? 'rgba(56,189,248,0.10)' : isMissed ? 'rgba(239,68,68,0.08)' : 'transparent'
               return (
                 <div key={day.dayName} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.4rem 0.5rem', borderRadius: '6px', background: rowBg }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 600, width: '28px', color: iconColor, textAlign: 'center' }}>{icon}</span>
@@ -555,8 +641,8 @@ export default function Dashboard() {
                   <span style={{ fontSize: '0.78rem', color: isRest ? 'var(--text-muted)' : 'var(--text-main)', fontWeight: isRest ? 400 : 500 }}>
                     {isRest ? 'Rest' : day.mapped}
                   </span>
-                  {isDone && <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 600 }}>Done</span>}
-                  {isDoneLate && <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 600 }}>Done late</span>}
+                  {isDone && <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: '#22c55e', fontWeight: 600 }}>Done</span>}
+                  {isDoneLate && <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: '#38bdf8', fontWeight: 600 }}>Done late</span>}
                   {isMissed && <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: '#ef4444' }}>Missed</span>}
                   {isQueued && <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: 'rgba(249,115,22,0.7)' }}>Up next</span>}
                 </div>
@@ -565,7 +651,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="card" style={{ marginBottom: 0 }}>
+        <div ref={recentSessionsRef} className="card" style={{ marginBottom: 0 }}>
           <h3 style={{ marginBottom: '0.8rem' }}>Recent Sessions</h3>
           <div className="flex flex-col gap-2">
             {insights.recentSessions.map((s: { id?: string, date: string, totalVolume: number, dayNumber?: number | null }, i: number) => (

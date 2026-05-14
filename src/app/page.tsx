@@ -2,41 +2,54 @@ import Link from 'next/link'
 
 export default function Home() {
   return (
-    <main className="container">
-      <div style={{ marginTop: '4rem', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
-          Welcome to <span style={{ color: 'var(--primary)' }}>Gym Tracker</span>
-        </h1>
-        <p className="mb-4">
-          An execution-first tracking app for athletes and trainers. Track your progressive overload without rigid calendar constraints.
-        </p>
-        
-        <div className="card text-center" style={{ marginTop: '2rem' }}>
-          <h2>Get Started</h2>
-          <p className="mb-4">Join today or sign in to continue your journey.</p>
-          <div className="flex flex-col gap-4">
-            <Link href="/auth" className="btn btn-primary w-full" style={{ textDecoration: 'none' }}>
-              Login / Sign Up
-            </Link>
+    <main className="container page-shell landing-page" style={{ marginTop: '2rem' }}>
+      <section className="landing-grid">
+        <div className="landing-stack">
+          <div className="page-header">
+            <span className="page-eyebrow">Mobile-first workout tracking</span>
+            <h1 className="page-title">Welcome to <span style={{ color: 'var(--primary)' }}>Gym Tracker</span></h1>
+            <p className="page-subtitle">
+              An execution-first system for athletes and trainers. Log sessions fast, keep plans flexible, and carry the same clean experience from phone to tablet to desktop.
+            </p>
+          </div>
+
+          <div className="card hero-card">
+            <div className="landing-hero-row">
+              <div>
+                <h2 style={{ marginBottom: '0.45rem' }}>Ready to train anywhere?</h2>
+                <p style={{ marginBottom: '1rem' }}>
+                  Build a plan, follow your next queued day, and review progress without desktop-only layouts slowing you down in the gym.
+                </p>
+              </div>
+              <div className="button-row" style={{ width: '100%', maxWidth: '380px' }}>
+                <Link href="/auth/athlete" className="btn btn-primary" style={{ textDecoration: 'none' }}>
+                  Athlete Login
+                </Link>
+                <Link href="/auth/trainer" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+                  Trainer Login
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div style={{ marginTop: '4rem', textAlign: 'left' }}>
-          <h3>Why Gym Tracker?</h3>
-          <div className="card">
-            <h4>💪 Execution-First</h4>
-            <p>1-tap fast logging with inline editing and historical context.</p>
-          </div>
-          <div className="card">
-            <h4>📅 Flexible Scheduling</h4>
-            <p>Day-agnostic blocks that handle missed days gracefully via a queue system.</p>
-          </div>
-          <div className="card">
-            <h4>🤝 Trainer Connection</h4>
-            <p>Privacy-first handshake for athletes to approve trainers.</p>
+        <div className="landing-stack">
+          <div className="landing-card-grid">
+            <div className="card">
+              <h4>💪 Execution-First</h4>
+              <p>Fast logging with set-by-set editing, previous performance context, and clean controls built for touch.</p>
+            </div>
+            <div className="card">
+              <h4>📅 Flexible Scheduling</h4>
+              <p>Day-agnostic training blocks keep progress moving even when real life changes your gym days.</p>
+            </div>
+            <div className="card">
+              <h4>🤝 Trainer Connection</h4>
+              <p>Private trainer approval, assigned plans, and athlete-specific customization without changing the source schedule.</p>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
     </main>
   )
 }

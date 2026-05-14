@@ -332,7 +332,7 @@ export default function CustomizeSchedulePage() {
     }
   }
 
-  if (loading) return <main className="container text-center mt-4">Loading schedule...</main>
+  if (loading) return <main className="container page-shell customize-page text-center mt-4">Loading schedule...</main>
 
   const totalTemplateDays = schedule?.workout_templates?.template_days?.length || 0
   const dayNumbers = Array.from({ length: totalTemplateDays }, (_, i) => i + 1)
@@ -387,20 +387,23 @@ export default function CustomizeSchedulePage() {
     trackingType === 'level' ? 'Level' : 'Weight (kg)'
 
   return (
-    <main className="container customize-page" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
+    <main className="container customize-page page-shell" style={{ marginBottom: '2rem' }}>
       <Link href="/athlete/schedule" style={{ textDecoration: 'none', color: 'var(--primary)' }} className="mb-4 inline-block">
         ← Back to Schedule
       </Link>
 
-      <h1 style={{ marginBottom: '1rem' }}>{schedule?.workout_templates.name}</h1>
-      <p className="text-muted" style={{ marginBottom: '1.5rem' }}>
-        Customize your personal schedule. Any changes here only affect you, not your trainer&apos;s template or other athletes&apos; schedules.
-      </p>
+      <div className="page-header">
+        <span className="page-eyebrow">Schedule customization</span>
+        <h1 className="page-title">{schedule?.workout_templates.name}</h1>
+        <p className="page-subtitle">
+          Customize your personal schedule. Any changes here only affect you, not your trainer&apos;s template or other athletes&apos; schedules.
+        </p>
+      </div>
 
       {/* Day Selector */}
       <div className="card mb-4" style={{ backgroundColor: 'var(--surface-hover)' }}>
         <h3 style={{ marginBottom: '1rem' }}>Select Day</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '0.5rem' }}>
+        <div className="chip-scroll customize-day-strip" style={{ display: 'flex' }}>
           {dayNumbers.map(day => (
             <button
               key={day}
@@ -591,12 +594,12 @@ export default function CustomizeSchedulePage() {
           className="btn btn-primary"
           onClick={handleAddExercise}
           disabled={saving || !newExerciseId}
-          style={{ marginBottom: '1rem' }}
+          style={{ marginBottom: '1rem', width: '100%' }}
         >
           {saving ? 'Adding...' : 'Add Exercise'}
         </button>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '0.5rem' }}>
+        <div className="chip-scroll customize-day-strip" style={{ display: 'flex' }}>
           {dayNumbers.map(day => (
             <button
               key={day}

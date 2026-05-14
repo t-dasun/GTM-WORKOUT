@@ -137,18 +137,37 @@ export default function SchedulePage() {
     }
   }
 
-  if (loading) return <main className="container text-center mt-4">Loading schedule...</main>
+  if (loading) return <main className="container page-shell schedule-page text-center mt-4">Loading schedule...</main>
 
   const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   const totalTemplateDays = scheduleData?.workout_templates?.template_days?.length || 0
   const dayOptions = Array.from({ length: totalTemplateDays }, (_, idx) => `Day ${idx + 1}`)
 
   return (
-    <main className="container" style={{ marginTop: '2rem' }}>
-      
-      <div className="card mb-4" style={{ backgroundColor: 'var(--surface-hover)' }}>
+    <main className="container page-shell schedule-page">
+      <div className="page-header page-header--split">
+        <div>
+          <span className="page-eyebrow">Athlete schedule</span>
+          <h1 className="page-title">My Schedule</h1>
+          <p className="page-subtitle">Manage your trainer connection, map workout blocks to weekdays, and keep old plans available from a layout tuned for mobile use.</p>
+        </div>
+        <div className="schedule-inline-actions">
+          {scheduleData && (
+            <Link href="/athlete/schedule/customize" className="btn btn-secondary">
+              ⚙ Customize
+            </Link>
+          )}
+          <Link href="/plan/create" className="btn btn-primary">
+            + New Plan
+          </Link>
+        </div>
+      </div>
+
+      <div className="schedule-layout">
+      <div className="schedule-stack">
+      <div className="card hero-card mb-4" style={{ backgroundColor: 'var(--surface-hover)' }}>
         <h3 style={{ marginBottom: '1rem' }}>My Trainer</h3>
-        <div className="flex gap-2 items-center">
+        <div className="schedule-inline-actions">
           <select 
             className="input-field" 
             style={{ flex: 1, marginBottom: 0 }} 
@@ -179,36 +198,22 @@ export default function SchedulePage() {
           </p>
         )}
         <p className="text-muted" style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
-          Link a trainer to your account. Your trainer will be able to manage your workout templates and schedule.
+          Link a trainer to your account. Your trainer will be able to manage your workout schedules and schedule mapping.
         </p>
-      </div>
-
-      <div className="flex justify-between items-center mb-4">
-        <h2>My Schedule</h2>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          {scheduleData && (
-            <Link href="/athlete/schedule/customize" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', textDecoration: 'none', fontSize: '0.875rem' }}>
-              ⚙ Customize
-            </Link>
-          )}
-          <Link href="/plan/create" className="btn btn-primary" style={{ padding: '0.5rem 1rem', textDecoration: 'none', fontSize: '0.875rem' }}>
-            + New Plan
-          </Link>
-        </div>
       </div>
       
       {!scheduleData ? (
         <div className="card text-center" style={{ marginTop: '2rem', padding: '2rem' }}>
           <h3 className="mb-4">No Active Plan</h3>
-          <p className="text-muted mb-4" style={{ color: 'var(--text-muted)' }}>You have not assigned any workout template to your schedule.</p>
+          <p className="text-muted mb-4" style={{ color: 'var(--text-muted)' }}>You have not assigned any workout schedule yet.</p>
           <Link href="/plan/create" className="btn btn-primary" style={{ textDecoration: 'none' }}>
             Create Workout Plan
           </Link>
         </div>
       ) : (
         <>
-          <div className="card" style={{ marginTop: '2rem' }}>
-            <h3 style={{ marginBottom: '0.25rem' }}>Active Template</h3>
+          <div className="card" style={{ marginTop: '0.5rem' }}>
+            <h3 style={{ marginBottom: '0.25rem' }}>Active Schedule</h3>
             <p className="text-muted" style={{ fontWeight: 500, color: 'var(--primary)', marginBottom: 0 }}>{scheduleData.workout_templates?.name || 'Unknown Plan'}</p>
             <p style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
               {totalTemplateDays} training day{totalTemplateDays === 1 ? '' : 's'} in this plan. Pick which day of the week each workout block should land on.
@@ -217,16 +222,16 @@ export default function SchedulePage() {
 
           <div className="card" style={{ marginTop: '2rem' }}>
             <h3>Weekly Mapping</h3>
-            <p style={{ fontSize: '0.75rem', marginBottom: '1rem' }}>Trainer can assign the plan. You control which weekday each template day belongs to.</p>
+            <p style={{ fontSize: '0.75rem', marginBottom: '1rem' }}>Trainer can assign the schedule. You control which weekday each schedule day belongs to.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {weekDays.map((day, idx) => {
                 const plan = mapping[day] || 'Rest'
                 return (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', borderBottom: idx < 6 ? '1px solid var(--border)' : 'none' }}>
-                    <span style={{ fontWeight: 500, width: '100px' }}>{day}</span>
+                  <div key={idx} className="schedule-mapping-row" style={{ padding: '0.65rem 0.5rem', borderBottom: idx < 6 ? '1px solid var(--border)' : 'none' }}>
+                    <span className="schedule-mapping-day" style={{ fontWeight: 500 }}>{day}</span>
                     <select
-                      className="input-field"
-                      style={{ width: '150px', padding: '0.45rem', marginBottom: 0 }}
+                      className="input-field schedule-mapping-select"
+                      style={{ padding: '0.45rem', marginBottom: 0 }}
                       value={plan}
                       onChange={(e) => setMapping((prev) => ({ ...prev, [day]: e.target.value }))}
                     >
@@ -246,7 +251,10 @@ export default function SchedulePage() {
         </>
       )}
 
-      <div className="card" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
+      </div>
+
+      <div className="schedule-stack">
+      <div className="card" style={{ marginTop: '0', marginBottom: '2rem' }}>
         <div className="flex justify-between items-center" style={{ marginBottom: '1rem' }}>
           <div>
             <h3 style={{ marginBottom: '0.1rem' }}>Schedule History</h3>
@@ -266,7 +274,7 @@ export default function SchedulePage() {
                 padding: '0.75rem 0.85rem',
                 background: isActive ? 'rgba(249,115,22,0.06)' : 'var(--background)'
               }}>
-                <div className="flex justify-between items-center" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div className="schedule-history-row" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="flex items-center" style={{ gap: '0.4rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
                       <p style={{ color: 'var(--text-main)', fontWeight: 600, margin: 0 }}>{h.workout_templates?.name || 'Unknown Plan'}</p>
@@ -315,6 +323,8 @@ export default function SchedulePage() {
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>No schedule history yet.</p>
           )}
         </div>
+      </div>
+      </div>
       </div>
     </main>
   )

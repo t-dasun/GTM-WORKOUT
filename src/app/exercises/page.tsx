@@ -155,19 +155,19 @@ export default function ExercisesPage() {
     setTrainerPass('')
   }
 
-  if (loading) return <main className="container" style={{ marginTop: '4rem', textAlign: 'center' }}>Loading exercises...</main>
+  if (loading) return <main className="container page-shell exercises-page" style={{ textAlign: 'center' }}>Loading exercises...</main>
 
   return (
-    <main className="container" style={{ marginTop: '1.5rem', paddingBottom: '5rem' }}>
+    <main className="container page-shell exercises-page" style={{ paddingBottom: '5rem' }}>
       {/* Header */}
-      <div style={{ marginBottom: '1rem' }}>
-        <p style={{ fontSize: '0.7rem', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>DICTIONARY</p>
-        <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.25rem' }}>Exercises</h1>
-        <p style={{ fontSize: '0.875rem' }}>Global, vetted list — add a custom variation if it&apos;s missing.</p>
+      <div className="page-header">
+        <span className="page-eyebrow">Exercise library</span>
+        <h1 className="page-title">Exercises</h1>
+        <p className="page-subtitle">Global, vetted list — add a custom variation if it&apos;s missing.</p>
       </div>
 
       {/* Search + actions */}
-      <div className="flex gap-2" style={{ marginBottom: '1rem', flexWrap: 'wrap' }}>
+      <div className="exercise-toolbar" style={{ marginBottom: '1rem', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
           <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🔍</span>
           <input
@@ -205,10 +205,10 @@ export default function ExercisesPage() {
       </div>
 
       {/* Exercise grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '0.75rem' }}>
+      <div className="exercise-grid">
         {filtered.map(ex => (
           <div key={ex.id} className="card" style={{ marginBottom: 0, padding: '1rem', cursor: 'pointer' }} onClick={() => openEdit(ex)}>
-            <div className="flex justify-between items-start" style={{ marginBottom: '0.4rem' }}>
+            <div className="exercise-card-row" style={{ marginBottom: '0.4rem' }}>
               <h4 style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: 0 }}>{ex.name}</h4>
               <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', flexShrink: 0, marginLeft: '0.5rem' }}>
                 <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', border: '1px solid var(--border)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
@@ -390,19 +390,10 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
 function BottomSheet({ children, onClose, title }: { children: React.ReactNode; onClose: () => void; title: string }) {
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      className="sheet-backdrop"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{
-        background: 'var(--surface)',
-        borderRadius: 'var(--radius-xl) var(--radius-xl) 0 0',
-        padding: '1.5rem',
-        width: '100%',
-        maxWidth: '600px',
-        maxHeight: '88vh',
-        overflowY: 'auto',
-        borderTop: '1px solid var(--border)'
-      }}>
+      <div className="sheet-panel">
         <div className="flex justify-between items-center" style={{ marginBottom: '1.25rem' }}>
           <h3 style={{ marginBottom: 0 }}>{title}</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.25rem', cursor: 'pointer' }}>✕</button>
